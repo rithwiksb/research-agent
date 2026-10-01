@@ -2,6 +2,8 @@ from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from .state import ResearchState
+from .tools import search_tool
+
 
 
 load_dotenv()
@@ -11,22 +13,36 @@ llm = ChatGoogleGenerativeAI(
     model="gemini-3.5-flash"
 )
 
+def search_web(state: ResearchState):
+    print("Running web search node...")
+
+    results = search_tool.invoke(state["question"])
+
+    return {
+        "research": results
+    }
 
 def research(state: ResearchState):
     print("Running research node...")
 
     response = llm.invoke(
         f"""
-        Research the following topic and explain the important information
-        clearly and accurately.
+        Research the following topic using the provided web search results.
 
-        Topic:
+        Question:
         {state['question']}
+
+        Web search results:
+        {state['search_results']}
+
+        Analyze the information and extract the important,
+        relevant and accurate facts that should be used
+        to answer the question.
         """
     )
 
     return {
-        "research": response.text()
+        "research": response.text
     }
 
 
@@ -47,5 +63,5 @@ def generate_answer(state: ResearchState):
     )
 
     return {
-        "answer": response.text()
+        "answer": response.text
     }
